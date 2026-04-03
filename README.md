@@ -1,4 +1,11 @@
-# Controle de Gastos Pessoais — API
+<center>
+<table>
+<tr>
+<td width="50"><img src=".github/workflows/assets/logo-puc-rio.png" alt="PUC-Rio" width="40"/></td>
+<td><h1>Controle de Gastos Pessoais — API</h1><td width="50"><img src=".github/workflows/assets/logo-puc-rio.png" alt="PUC-Rio" width="40"/></td></td>
+</tr>
+</table>
+</center>
 
 API REST desenvolvida em **Python + Flask** para registro e consulta de gastos pessoais organizados por categorias. Utiliza **SQLite** como banco de dados, **SQLAlchemy** como ORM e expõe documentação interativa via **OpenAPI 3.0 (Swagger UI)**.
 
