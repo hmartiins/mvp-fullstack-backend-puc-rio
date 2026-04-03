@@ -4,47 +4,17 @@ from flask import jsonify
 from sqlalchemy.exc import IntegrityError
 
 from model.models import db, Categoria
-from schemas.categoria import CategoriaInput
-from utils import validate_body
+from schemas.categoria import CategoriaInput, CategoriaResponse
+from schemas.comum import ErroResponse, ErrosResponse
 from routes.categorias import bp
 
 
-@bp.route("", methods=["POST"])
-@validate_body(CategoriaInput)
+@bp.post(
+    "",
+    responses={"201": CategoriaResponse, "400": ErroResponse, "409": ErroResponse, "422": ErrosResponse},
+)
 def criar_categoria(body: CategoriaInput):
-    """
-    Cadastrar nova categoria
-    ---
-    tags:
-      - Categorias
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/CategoriaInput'
-    responses:
-      201:
-        description: Categoria criada com sucesso
-        schema:
-          $ref: '#/definitions/Categoria'
-      400:
-        description: Dados inválidos ou campo obrigatório ausente
-        schema:
-          $ref: '#/definitions/Erro'
-      409:
-        description: Categoria com esse nome já existe
-        schema:
-          $ref: '#/definitions/Erro'
-      422:
-        description: Tipo de campo inválido
-        schema:
-          $ref: '#/definitions/Erro'
-      500:
-        description: Erro interno do servidor
-        schema:
-          $ref: '#/definitions/Erro'
-    """
+    """Cadastrar nova categoria"""
     nome = body.nome.strip()
     descricao = body.descricao.strip() if body.descricao else None
 

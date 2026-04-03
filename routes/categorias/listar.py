@@ -1,28 +1,14 @@
 from flask import jsonify
 
 from model.models import Categoria
+from schemas.categoria import CategoriaResponse
+from schemas.comum import ErroResponse
 from routes.categorias import bp
 
 
-@bp.route("", methods=["GET"])
+@bp.get("", responses={"200": CategoriaResponse, "500": ErroResponse})
 def listar_categorias():
-    """
-    Listar todas as categorias
-    ---
-    tags:
-      - Categorias
-    responses:
-      200:
-        description: Lista de categorias
-        schema:
-          type: array
-          items:
-            $ref: '#/definitions/Categoria'
-      500:
-        description: Erro interno
-        schema:
-          $ref: '#/definitions/Erro'
-    """
+    """Listar todas as categorias"""
     try:
         categorias = Categoria.query.order_by(Categoria.nome).all()
     except Exception as e:

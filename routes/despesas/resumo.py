@@ -2,28 +2,14 @@ from flask import jsonify
 from sqlalchemy import func
 
 from model.models import db, Categoria, Despesa
+from schemas.despesa import ResumoResponse
+from schemas.comum import ErroResponse
 from routes.despesas import bp
 
 
-@bp.route("/resumo", methods=["GET"])
+@bp.get("/resumo", responses={"200": ResumoResponse, "500": ErroResponse})
 def resumo_despesas():
-    """
-    Total gasto agrupado por categoria
-    ---
-    tags:
-      - Despesas
-    responses:
-      200:
-        description: Resumo com total e quantidade de despesas por categoria
-        schema:
-          type: array
-          items:
-            $ref: '#/definitions/Resumo'
-      500:
-        description: Erro interno
-        schema:
-          $ref: '#/definitions/Erro'
-    """
+    """Total gasto agrupado por categoria"""
     try:
         rows = (
             db.session.query(

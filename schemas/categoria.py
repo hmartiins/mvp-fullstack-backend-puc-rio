@@ -1,8 +1,21 @@
-from typing import Optional
+from typing import Optional, Annotated, List
 from pydantic import BaseModel, Field
-from typing import Annotated
 
 
 class CategoriaInput(BaseModel):
-    nome: Annotated[str, Field(min_length=1)]
+    nome: Annotated[str, Field(min_length=1, description="Nome da categoria")]
+    descricao: Optional[str] = Field(None, description="Descrição opcional")
+
+
+class CategoriaResponse(BaseModel):
+    id: str
+    nome: str
     descricao: Optional[str] = None
+
+
+class CategoriaListResponse(BaseModel):
+    root: List[CategoriaResponse]
+
+
+class CategoriaPath(BaseModel):
+    categoria_id: str = Field(description="UUID da categoria")

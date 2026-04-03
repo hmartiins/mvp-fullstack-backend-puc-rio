@@ -1,15 +1,23 @@
 import os
 
-from flask import Flask
+from flask import jsonify
 from flask_cors import CORS
-from flasgger import Swagger
+from flask_openapi3 import OpenAPI, Info
+from pydantic import ValidationError
 
 from model.models import db
-from swagger_config import SWAGGER_TEMPLATE, SWAGGER_CONFIG
+from utils import format_pydantic_errors
 from routes.categorias import bp as categorias_bp
 from routes.despesas import bp as despesas_bp
 
-app = Flask(__name__)
+
+info = Info(
+    title="Controle de Gastos Pessoais",
+    version="1.0.0",
+    description="API REST para registrar e consultar gastos pessoais organizados por categorias.",
+)
+
+app = OpenAPI(__name__, info=info, doc_prefix="/docs")
 CORS(app)
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -20,14 +28,18 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 
-Swagger(app, template=SWAGGER_TEMPLATE, config=SWAGGER_CONFIG)
 
-app.register_blueprint(categorias_bp)
-app.register_blueprint(despesas_bp)
+@app.errorhandler(ValidationError)
+def handle_validation_error(e: ValidationError):
+    return jsonify({"erros": format_pydantic_errors(e.errors())}), 422
+
+
+app.register_api(categorias_bp)
+app.register_api(despesas_bp)
 
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     print("Banco de dados inicializado.")
-    print("Documentação Swagger disponível em: http://localhost:5001/docs")
+    print("Swagger UI disponível em: http://localhost:5001/docs/swagger")
     app.run(debug=True, port=5001)

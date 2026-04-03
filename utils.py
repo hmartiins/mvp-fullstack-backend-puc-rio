@@ -1,8 +1,4 @@
 from datetime import datetime
-from functools import wraps
-
-from flask import request, jsonify
-from pydantic import ValidationError
 
 
 def parse_date(value: str):
@@ -26,7 +22,7 @@ def _json_type_name(value) -> str:
     return type(value).__name__
 
 
-def _format_pydantic_errors(errors: list) -> list:
+def format_pydantic_errors(errors: list) -> list:
     messages = []
     for err in errors:
         field = err["loc"][0] if err["loc"] else "?"
@@ -55,23 +51,3 @@ def _format_pydantic_errors(errors: list) -> list:
             messages.append(f"O campo '{field}': {err['msg']}")
 
     return messages
-
-
-def validate_body(schema_class):
-    """
-    Decorator que valida o corpo da requisição contra um schema Pydantic.
-    Injeta o objeto validado como `body` na função da rota.
-    """
-    def decorator(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            data = request.get_json(silent=True)
-            if not data:
-                return jsonify({"erro": "Corpo da requisição inválido ou ausente"}), 400
-            try:
-                kwargs["body"] = schema_class.model_validate(data)
-            except ValidationError as e:
-                return jsonify({"erros": _format_pydantic_errors(e.errors())}), 422
-            return f(*args, **kwargs)
-        return wrapper
-    return decorator

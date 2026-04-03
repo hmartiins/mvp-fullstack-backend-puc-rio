@@ -1,43 +1,19 @@
 from flask import jsonify
 
 from model.models import db, Categoria, Despesa
+from schemas.categoria import CategoriaPath
+from schemas.comum import ErroResponse, MensagemResponse
 from routes.categorias import bp
 
 
-@bp.route("/<string:categoria_id>", methods=["DELETE"])
-def deletar_categoria(categoria_id):
-    """
-    Deletar uma categoria pelo ID
-    ---
-    tags:
-      - Categorias
-    parameters:
-      - in: path
-        name: categoria_id
-        type: string
-        required: true
-        description: UUID da categoria a deletar
-    responses:
-      200:
-        description: Categoria deletada com sucesso
-        schema:
-          type: object
-          properties:
-            mensagem:
-              type: string
-      404:
-        description: Categoria não encontrada
-        schema:
-          $ref: '#/definitions/Erro'
-      409:
-        description: Categoria possui despesas vinculadas
-        schema:
-          $ref: '#/definitions/Erro'
-      500:
-        description: Erro interno
-        schema:
-          $ref: '#/definitions/Erro'
-    """
+@bp.delete(
+    "/<categoria_id>",
+    responses={"200": MensagemResponse, "404": ErroResponse, "409": ErroResponse},
+)
+def deletar_categoria(path: CategoriaPath):
+    """Deletar uma categoria pelo ID"""
+    categoria_id = path.categoria_id
+
     try:
         categoria = db.session.get(Categoria, categoria_id)
         if not categoria:
