@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from sqlalchemy.exc import IntegrityError
 
-from model.models import db, Categoria, Despesa
+from model import db, Categoria, Despesa
 from service.exceptions import NotFoundError, ConflictError
 
 

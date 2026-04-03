@@ -4,7 +4,7 @@ from typing import List
 
 from sqlalchemy import func
 
-from model.models import db, Categoria, Despesa
+from model import db, Categoria, Despesa
 from service.exceptions import NotFoundError, ConflictError
 
 

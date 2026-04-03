@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_openapi3 import OpenAPI, Info
 from pydantic import ValidationError
 
-from model.models import db
+from model import db
 from utils import format_pydantic_errors
 from service.exceptions import NotFoundError, ConflictError
 from routes.categorias import bp as categorias_bp
