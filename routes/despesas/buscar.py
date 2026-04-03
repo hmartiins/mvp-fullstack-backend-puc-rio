@@ -1,7 +1,6 @@
 from flask import jsonify
 
-from model.models import get_db
-from utils import row_to_dict
+from model.models import db, Despesa
 from routes.despesas import bp
 
 
@@ -33,21 +32,11 @@ def buscar_despesa(despesa_id):
           $ref: '#/definitions/Erro'
     """
     try:
-        conn = get_db()
-        row = conn.execute(
-            """
-            SELECT d.id, d.descricao, d.valor, d.data, d.categoria_id, c.nome AS categoria_nome
-            FROM despesas d
-            JOIN categorias c ON c.id = d.categoria_id
-            WHERE d.id = ?
-            """,
-            (despesa_id,),
-        ).fetchone()
-        conn.close()
+        despesa = db.session.get(Despesa, despesa_id)
     except Exception as e:
         return jsonify({"erro": "Erro ao buscar despesa", "detalhe": str(e)}), 500
 
-    if not row:
+    if not despesa:
         return jsonify({"erro": "Despesa não encontrada"}), 404
 
-    return jsonify(row_to_dict(row)), 200
+    return jsonify(despesa.to_dict()), 200

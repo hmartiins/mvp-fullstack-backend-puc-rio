@@ -2,7 +2,7 @@ import uuid
 
 from flask import request, jsonify
 
-from model.models import get_db
+from model.models import db, Categoria, Despesa
 from utils import parse_date
 from routes.despesas import bp
 
@@ -68,36 +68,21 @@ def criar_despesa():
         return jsonify({"erro": "O campo 'categoria_id' não pode estar vazio"}), 400
 
     try:
-        conn = get_db()
-
-        categoria = conn.execute(
-            "SELECT id, nome FROM categorias WHERE id = ?", (categoria_id,)
-        ).fetchone()
+        categoria = db.session.get(Categoria, categoria_id)
         if not categoria:
-            conn.close()
             return jsonify({"erro": f"Categoria com id {categoria_id} não encontrada"}), 404
 
-        cursor = conn.cursor()
-        despesa_id = str(uuid.uuid4())
-        cursor.execute(
-            "INSERT INTO despesas (id, descricao, valor, data, categoria_id) VALUES (?, ?, ?, ?, ?)",
-            (despesa_id, descricao, valor, data_despesa, categoria_id),
+        despesa = Despesa(
+            id=str(uuid.uuid4()),
+            descricao=descricao,
+            valor=valor,
+            data=data_despesa,
+            categoria_id=categoria_id,
         )
-        conn.commit()
-        conn.close()
+        db.session.add(despesa)
+        db.session.commit()
     except Exception as e:
+        db.session.rollback()
         return jsonify({"erro": "Erro ao criar despesa", "detalhe": str(e)}), 500
 
-    return (
-        jsonify(
-            {
-                "id": despesa_id,
-                "descricao": descricao,
-                "valor": valor,
-                "data": data_despesa,
-                "categoria_id": categoria_id,
-                "categoria_nome": categoria["nome"],
-            }
-        ),
-        201,
-    )
+    return jsonify(despesa.to_dict()), 201

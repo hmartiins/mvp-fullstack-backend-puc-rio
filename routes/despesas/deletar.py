@@ -1,6 +1,6 @@
 from flask import jsonify
 
-from model.models import get_db
+from model.models import db, Despesa
 from routes.despesas import bp
 
 
@@ -35,19 +35,14 @@ def deletar_despesa(despesa_id):
           $ref: '#/definitions/Erro'
     """
     try:
-        conn = get_db()
-
-        despesa = conn.execute(
-            "SELECT id FROM despesas WHERE id = ?", (despesa_id,)
-        ).fetchone()
+        despesa = db.session.get(Despesa, despesa_id)
         if not despesa:
-            conn.close()
             return jsonify({"erro": "Despesa não encontrada"}), 404
 
-        conn.execute("DELETE FROM despesas WHERE id = ?", (despesa_id,))
-        conn.commit()
-        conn.close()
+        db.session.delete(despesa)
+        db.session.commit()
     except Exception as e:
+        db.session.rollback()
         return jsonify({"erro": "Erro ao deletar despesa", "detalhe": str(e)}), 500
 
     return jsonify({"mensagem": f"Despesa {despesa_id} deletada com sucesso"}), 200

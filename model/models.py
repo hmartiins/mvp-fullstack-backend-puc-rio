@@ -1,42 +1,36 @@
-import os
-import sqlite3
+from flask_sqlalchemy import SQLAlchemy
 
-DATABASE = os.path.join(os.path.dirname(__file__), "..", "database", "gastos.db")
-
-
-def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+db = SQLAlchemy()
 
 
-def init_db():
-    conn = get_db()
-    cursor = conn.cursor()
+class Categoria(db.Model):
+    __tablename__ = "categorias"
 
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS categorias (
-            id          TEXT PRIMARY KEY,
-            nome        TEXT NOT NULL UNIQUE,
-            descricao   TEXT
-        )
-    """
-    )
+    id = db.Column(db.String, primary_key=True)
+    nome = db.Column(db.String, nullable=False, unique=True)
+    descricao = db.Column(db.String, nullable=True)
 
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS despesas (
-            id           TEXT PRIMARY KEY,
-            descricao    TEXT NOT NULL,
-            valor        REAL NOT NULL,
-            data         TEXT NOT NULL,
-            categoria_id TEXT NOT NULL,
-            FOREIGN KEY (categoria_id) REFERENCES categorias(id)
-        )
-    """
-    )
+    despesas = db.relationship("Despesa", backref="categoria", lazy="select")
 
-    conn.commit()
-    conn.close()
+    def to_dict(self):
+        return {"id": self.id, "nome": self.nome, "descricao": self.descricao}
+
+
+class Despesa(db.Model):
+    __tablename__ = "despesas"
+
+    id = db.Column(db.String, primary_key=True)
+    descricao = db.Column(db.String, nullable=False)
+    valor = db.Column(db.Float, nullable=False)
+    data = db.Column(db.String, nullable=False)
+    categoria_id = db.Column(db.String, db.ForeignKey("categorias.id"), nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "descricao": self.descricao,
+            "valor": self.valor,
+            "data": self.data,
+            "categoria_id": self.categoria_id,
+            "categoria_nome": self.categoria.nome if self.categoria else None,
+        }

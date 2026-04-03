@@ -1,7 +1,6 @@
 from flask import jsonify
 
-from model.models import get_db
-from utils import row_to_dict
+from model.models import Despesa
 from routes.despesas import bp
 
 
@@ -25,17 +24,8 @@ def listar_despesas():
           $ref: '#/definitions/Erro'
     """
     try:
-        conn = get_db()
-        rows = conn.execute(
-            """
-            SELECT d.id, d.descricao, d.valor, d.data, d.categoria_id, c.nome AS categoria_nome
-            FROM despesas d
-            JOIN categorias c ON c.id = d.categoria_id
-            ORDER BY d.data DESC, d.id DESC
-            """
-        ).fetchall()
-        conn.close()
+        despesas = Despesa.query.order_by(Despesa.data.desc(), Despesa.id.desc()).all()
     except Exception as e:
         return jsonify({"erro": "Erro ao buscar despesas", "detalhe": str(e)}), 500
 
-    return jsonify([row_to_dict(r) for r in rows]), 200
+    return jsonify([d.to_dict() for d in despesas]), 200

@@ -1,7 +1,7 @@
 from flask import request, jsonify
 
-from model.models import get_db
-from utils import parse_date, row_to_dict
+from model.models import Despesa
+from utils import parse_date
 from routes.despesas import bp
 
 
@@ -57,19 +57,13 @@ def despesas_por_periodo():
         return jsonify({"erro": "'data_inicio' não pode ser posterior a 'data_fim'"}), 400
 
     try:
-        conn = get_db()
-        rows = conn.execute(
-            """
-            SELECT d.id, d.descricao, d.valor, d.data, d.categoria_id, c.nome AS categoria_nome
-            FROM despesas d
-            JOIN categorias c ON c.id = d.categoria_id
-            WHERE d.data BETWEEN ? AND ?
-            ORDER BY d.data ASC
-            """,
-            (di, df),
-        ).fetchall()
-        conn.close()
+        despesas = (
+            Despesa.query
+            .filter(Despesa.data.between(di, df))
+            .order_by(Despesa.data.asc())
+            .all()
+        )
     except Exception as e:
         return jsonify({"erro": "Erro ao filtrar despesas", "detalhe": str(e)}), 500
 
-    return jsonify([row_to_dict(r) for r in rows]), 200
+    return jsonify([d.to_dict() for d in despesas]), 200

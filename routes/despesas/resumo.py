@@ -1,7 +1,7 @@
 from flask import jsonify
+from sqlalchemy import func
 
-from model.models import get_db
-from utils import row_to_dict
+from model.models import db, Categoria, Despesa
 from routes.despesas import bp
 
 
@@ -25,20 +25,27 @@ def resumo_despesas():
           $ref: '#/definitions/Erro'
     """
     try:
-        conn = get_db()
-        rows = conn.execute(
-            """
-            SELECT c.id AS categoria_id, c.nome AS categoria_nome,
-                   ROUND(SUM(d.valor), 2) AS total,
-                   COUNT(d.id) AS quantidade
-            FROM categorias c
-            LEFT JOIN despesas d ON d.categoria_id = c.id
-            GROUP BY c.id, c.nome
-            ORDER BY total DESC
-            """
-        ).fetchall()
-        conn.close()
+        rows = (
+            db.session.query(
+                Categoria.id.label("categoria_id"),
+                Categoria.nome.label("categoria_nome"),
+                func.round(func.coalesce(func.sum(Despesa.valor), 0), 2).label("total"),
+                func.count(Despesa.id).label("quantidade"),
+            )
+            .outerjoin(Despesa, Despesa.categoria_id == Categoria.id)
+            .group_by(Categoria.id, Categoria.nome)
+            .order_by(func.sum(Despesa.valor).desc())
+            .all()
+        )
     except Exception as e:
         return jsonify({"erro": "Erro ao gerar resumo", "detalhe": str(e)}), 500
 
-    return jsonify([row_to_dict(r) for r in rows]), 200
+    return jsonify([
+        {
+            "categoria_id": r.categoria_id,
+            "categoria_nome": r.categoria_nome,
+            "total": r.total,
+            "quantidade": r.quantidade,
+        }
+        for r in rows
+    ]), 200

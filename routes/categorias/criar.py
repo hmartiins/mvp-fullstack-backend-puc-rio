@@ -1,8 +1,9 @@
 import uuid
 
 from flask import request, jsonify
+from sqlalchemy.exc import IntegrityError
 
-from model.models import get_db
+from model.models import db, Categoria
 from routes.categorias import bp
 
 
@@ -45,18 +46,14 @@ def criar_categoria():
     descricao = data.get("descricao", "").strip() or None
 
     try:
-        conn = get_db()
-        cursor = conn.cursor()
-        categoria_id = str(uuid.uuid4())
-        cursor.execute(
-            "INSERT INTO categorias (id, nome, descricao) VALUES (?, ?, ?)",
-            (categoria_id, nome, descricao),
-        )
-        conn.commit()
-        conn.close()
+        categoria = Categoria(id=str(uuid.uuid4()), nome=nome, descricao=descricao)
+        db.session.add(categoria)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"erro": f"Já existe uma categoria com o nome '{nome}'"}), 409
     except Exception as e:
-        if "UNIQUE" in str(e):
-            return jsonify({"erro": f"Já existe uma categoria com o nome '{nome}'"}), 409
+        db.session.rollback()
         return jsonify({"erro": "Erro interno ao criar categoria", "detalhe": str(e)}), 500
 
-    return jsonify({"id": categoria_id, "nome": nome, "descricao": descricao}), 201
+    return jsonify(categoria.to_dict()), 201

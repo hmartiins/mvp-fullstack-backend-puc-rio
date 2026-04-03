@@ -1,7 +1,6 @@
 from flask import jsonify
 
-from model.models import get_db
-from utils import row_to_dict
+from model.models import Categoria
 from routes.categorias import bp
 
 
@@ -25,12 +24,8 @@ def listar_categorias():
           $ref: '#/definitions/Erro'
     """
     try:
-        conn = get_db()
-        rows = conn.execute(
-            "SELECT id, nome, descricao FROM categorias ORDER BY nome"
-        ).fetchall()
-        conn.close()
+        categorias = Categoria.query.order_by(Categoria.nome).all()
     except Exception as e:
         return jsonify({"erro": "Erro ao buscar categorias", "detalhe": str(e)}), 500
 
-    return jsonify([row_to_dict(r) for r in rows]), 200
+    return jsonify([c.to_dict() for c in categorias]), 200
