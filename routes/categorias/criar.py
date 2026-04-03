@@ -1,14 +1,17 @@
 import uuid
 
-from flask import request, jsonify
+from flask import jsonify
 from sqlalchemy.exc import IntegrityError
 
 from model.models import db, Categoria
+from schemas.categoria import CategoriaInput
+from utils import validate_body
 from routes.categorias import bp
 
 
 @bp.route("", methods=["POST"])
-def criar_categoria():
+@validate_body(CategoriaInput)
+def criar_categoria(body: CategoriaInput):
     """
     Cadastrar nova categoria
     ---
@@ -33,17 +36,17 @@ def criar_categoria():
         description: Categoria com esse nome já existe
         schema:
           $ref: '#/definitions/Erro'
+      422:
+        description: Tipo de campo inválido
+        schema:
+          $ref: '#/definitions/Erro'
       500:
         description: Erro interno do servidor
         schema:
           $ref: '#/definitions/Erro'
     """
-    data = request.get_json(silent=True)
-    if not data or not data.get("nome", "").strip():
-        return jsonify({"erro": "O campo 'nome' é obrigatório"}), 400
-
-    nome = data["nome"].strip()
-    descricao = data.get("descricao", "").strip() or None
+    nome = body.nome.strip()
+    descricao = body.descricao.strip() if body.descricao else None
 
     try:
         categoria = Categoria(id=str(uuid.uuid4()), nome=nome, descricao=descricao)
