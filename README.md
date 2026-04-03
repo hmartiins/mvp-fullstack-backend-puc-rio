@@ -1,6 +1,6 @@
 # Controle de Gastos Pessoais — API
 
-API REST desenvolvida em Python + Flask para registro e consulta de gastos pessoais organizados por categorias. Utiliza SQLite como banco de dados e expõe documentação interativa via Swagger.
+API REST desenvolvida em **Python + Flask** para registro e consulta de gastos pessoais organizados por categorias. Utiliza **SQLite** como banco de dados, **SQLAlchemy** como ORM e expõe documentação interativa via **OpenAPI 3.0 (Swagger UI)**.
 
 ---
 
@@ -10,34 +10,38 @@ API REST desenvolvida em Python + Flask para registro e consulta de gastos pesso
 - Registro de **despesas** com valor, data e descrição vinculada a uma categoria
 - Consulta de **resumo de gastos por categoria**
 - Filtragem de despesas por **intervalo de datas**
-- Documentação Swagger em `/docs`
+- Validação automática de tipos e campos obrigatórios via **Pydantic**
+- Documentação interativa disponível em `/docs/swagger`
 
 ---
 
 ## Pré-requisitos
 
-- Python 3.10 ou superior
-- pip
+- **[Python 3.10](https://www.python.org/downloads/release/python-3100/)** ou superior
+- **pip3**
 
 ---
 
 ## Instalação
 
-### 1. Clone ou copie o projeto
+### 1. Clone o repositório
 
 ```bash
-cd controle-gastos-api
+git clone https://github.com/hmartiins/mvp-fullstack-backend-puc-rio.git
+cd mvp-fullstack-backend-puc-rio
 ```
 
 ### 2. Crie e ative o ambiente virtual
 
 **macOS / Linux:**
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
 
 **Windows:**
+
 ```bash
 python -m venv venv
 venv\Scripts\activate
@@ -54,20 +58,20 @@ pip install -r requirements.txt
 ## Iniciando o servidor
 
 ```bash
-python app.py
+python3 app.py
 ```
 
-O servidor iniciará em `http://localhost:5000`.
-O banco de dados `gastos.db` será criado automaticamente na primeira execução.
+O servidor iniciará em `http://localhost:5001`.  
+O banco de dados será criado automaticamente em `database/gastos.db` na primeira execução.
 
 ---
 
-## Documentação Swagger
+## Documentação
 
-Acesse a interface interativa com todos os endpoints documentados:
+Acesse a interface interativa (Swagger) com todos os endpoints documentados:
 
 ```
-http://localhost:5000/docs
+http://localhost:5001/docs/swagger
 ```
 
 ---
@@ -76,22 +80,22 @@ http://localhost:5000/docs
 
 ### Categorias
 
-| Método | Rota                    | Descrição                     |
-|--------|-------------------------|-------------------------------|
-| POST   | `/categorias`           | Cadastrar nova categoria       |
-| GET    | `/categorias`           | Listar todas as categorias     |
-| DELETE | `/categorias/<id>`      | Deletar uma categoria          |
+| Método   | Rota               | Descrição                  |
+| -------- | ------------------ | -------------------------- |
+| `POST`   | `/categorias`      | Cadastrar nova categoria   |
+| `GET`    | `/categorias`      | Listar todas as categorias |
+| `DELETE` | `/categorias/<id>` | Deletar uma categoria      |
 
 ### Despesas
 
-| Método | Rota                    | Descrição                              |
-|--------|-------------------------|----------------------------------------|
-| POST   | `/despesas`             | Cadastrar nova despesa                 |
-| GET    | `/despesas`             | Listar todas as despesas               |
-| GET    | `/despesas/<id>`        | Buscar despesa por ID                  |
-| DELETE | `/despesas/<id>`        | Deletar uma despesa                    |
-| GET    | `/despesas/resumo`      | Total gasto por categoria              |
-| GET    | `/despesas/periodo`     | Filtrar por período (`data_inicio` e `data_fim` como query params) |
+| Método   | Rota                | Descrição                                                      |
+| -------- | ------------------- | -------------------------------------------------------------- |
+| `POST`   | `/despesas`         | Cadastrar nova despesa                                         |
+| `GET`    | `/despesas`         | Listar todas as despesas                                       |
+| `GET`    | `/despesas/<id>`    | Buscar despesa por ID                                          |
+| `DELETE` | `/despesas/<id>`    | Deletar uma despesa                                            |
+| `GET`    | `/despesas/resumo`  | Total gasto por categoria                                      |
+| `GET`    | `/despesas/periodo` | Filtrar por período (query params: `data_inicio` e `data_fim`) |
 
 ---
 
@@ -100,7 +104,7 @@ http://localhost:5000/docs
 ### Criar categoria
 
 ```bash
-curl -X POST http://localhost:5000/categorias \
+curl -X POST http://localhost:5001/categorias \
   -H "Content-Type: application/json" \
   -d '{"nome": "Alimentação", "descricao": "Refeições e mercado"}'
 ```
@@ -108,15 +112,20 @@ curl -X POST http://localhost:5000/categorias \
 ### Criar despesa
 
 ```bash
-curl -X POST http://localhost:5000/despesas \
+curl -X POST http://localhost:5001/despesas \
   -H "Content-Type: application/json" \
-  -d '{"descricao": "Almoço", "valor": 35.50, "data": "2024-03-15", "categoria_id": 1}'
+  -d '{
+    "descricao": "Almoço",
+    "valor": 35.50,
+    "data": "2024-03-15",
+    "categoria_id": "<uuid-da-categoria>"
+  }'
 ```
 
 ### Filtrar por período
 
 ```bash
-curl "http://localhost:5000/despesas/periodo?data_inicio=2024-01-01&data_fim=2024-12-31"
+curl "http://localhost:5001/despesas/periodo?data_inicio=2024-01-01&data_fim=2024-12-31"
 ```
 
 ---
@@ -125,17 +134,39 @@ curl "http://localhost:5000/despesas/periodo?data_inicio=2024-01-01&data_fim=202
 
 ```
 controle-gastos-api/
-├── app.py           # Rotas, lógica da API e configuração Swagger
-├── models.py        # Conexão com SQLite e inicialização do banco
-├── requirements.txt # Dependências Python
-└── README.md        # Este arquivo
+├── app.py                  # Configuração da aplicação e handlers globais
+├── utils.py                # Funções utilitárias
+├── requirements.txt        # Dependências Python
+├── model/
+│   └── models.py           # Modelos SQLAlchemy (Categoria, Despesa)
+├── schemas/
+│   ├── categoria.py        # Schemas Pydantic de categorias
+│   ├── despesa.py          # Schemas Pydantic de despesas
+│   └── comum.py            # Schemas de resposta compartilhados
+├── service/
+│   ├── categoria_service.py  # Lógica de negócio de categorias
+│   ├── despesa_service.py    # Lógica de negócio de despesas
+│   └── exceptions.py         # Exceções de domínio (NotFoundError, ConflictError)
+├── routes/
+│   ├── categorias/         # Endpoints de categorias
+│   └── despesas/           # Endpoints de despesas
+├── database/               # Banco de dados SQLite (gerado automaticamente)
+└── .github/
+    └── workflows/
+        └── ci.yml          # Pipeline de CI (GitHub Actions)
 ```
 
 ---
 
 ## Banco de dados
 
-O arquivo `gastos.db` é gerado automaticamente. O esquema possui duas tabelas:
+O arquivo `gastos.db` é gerado automaticamente dentro da pasta `database/`. O esquema possui duas tabelas:
 
-- **categorias** — `id`, `nome` (único), `descricao`
-- **despesas** — `id`, `descricao`, `valor`, `data`, `categoria_id` (FK → categorias)
+- **categorias** — `id` (UUID), `nome` (único), `descricao`
+- **despesas** — `id` (UUID), `descricao`, `valor`, `data`, `categoria_id` (FK → categorias)
+
+Para recriar o banco do zero:
+
+```bash
+rm -f database/gastos.db && python3 app.py
+```
