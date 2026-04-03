@@ -6,10 +6,6 @@ def parse_date(value: str):
     return datetime.strptime(value, "%Y-%m-%d").date()
 
 
-def row_to_dict(row) -> dict:
-    return dict(row) if row else None
-
-
 def _json_type_name(value) -> str:
     if value is None:
         return "null"
