@@ -5,6 +5,7 @@ from flask import jsonify
 from model.models import db, Categoria, Despesa
 from schemas.despesa import DespesaInput, DespesaResponse
 from schemas.comum import ErroResponse, ErrosResponse
+from utils import parse_date
 from routes.despesas import bp
 
 
@@ -23,7 +24,7 @@ def criar_despesa(body: DespesaInput):
             id=str(uuid.uuid4()),
             descricao=body.descricao.strip(),
             valor=body.valor,
-            data=body.data,
+            data=parse_date(body.data),
             categoria_id=body.categoria_id,
         )
         db.session.add(despesa)
