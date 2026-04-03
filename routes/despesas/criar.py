@@ -1,10 +1,8 @@
-import uuid
-
 from flask import jsonify
 
-from model.models import db, Categoria, Despesa
 from schemas.despesa import DespesaInput, DespesaResponse
 from schemas.comum import ErroResponse, ErrosResponse
+from service import despesa_service
 from utils import parse_date
 from routes.despesas import bp
 
@@ -15,22 +13,10 @@ from routes.despesas import bp
 )
 def criar_despesa(body: DespesaInput):
     """Cadastrar nova despesa"""
-    try:
-        categoria = db.session.get(Categoria, body.categoria_id)
-        if not categoria:
-            return jsonify({"erro": f"Categoria com id {body.categoria_id} não encontrada"}), 404
-
-        despesa = Despesa(
-            id=str(uuid.uuid4()),
-            descricao=body.descricao.strip(),
-            valor=body.valor,
-            data=parse_date(body.data),
-            categoria_id=body.categoria_id,
-        )
-        db.session.add(despesa)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"erro": "Erro ao criar despesa", "detalhe": str(e)}), 500
-
+    despesa = despesa_service.criar(
+        descricao=body.descricao.strip(),
+        valor=body.valor,
+        data=parse_date(body.data),
+        categoria_id=body.categoria_id,
+    )
     return jsonify(despesa.to_dict()), 201

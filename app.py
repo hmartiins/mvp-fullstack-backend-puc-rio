@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from model.models import db
 from utils import format_pydantic_errors
+from service.exceptions import NotFoundError, ConflictError
 from routes.categorias import bp as categorias_bp
 from routes.despesas import bp as despesas_bp
 
@@ -32,6 +33,16 @@ db.init_app(app)
 @app.errorhandler(ValidationError)
 def handle_validation_error(e: ValidationError):
     return jsonify({"erros": format_pydantic_errors(e.errors())}), 422
+
+
+@app.errorhandler(NotFoundError)
+def handle_not_found(e: NotFoundError):
+    return jsonify({"erro": e.message}), 404
+
+
+@app.errorhandler(ConflictError)
+def handle_conflict(e: ConflictError):
+    return jsonify({"erro": e.message}), 409
 
 
 app.register_api(categorias_bp)
