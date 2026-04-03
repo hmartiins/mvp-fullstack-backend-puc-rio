@@ -1,6 +1,7 @@
+import os
 import sqlite3
 
-DATABASE = "gastos.db"
+DATABASE = os.path.join(os.path.dirname(__file__), "..", "database", "gastos.db")
 
 
 def get_db():

@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from flasgger import Swagger
 
-from models import init_db
+from model.models import init_db
 from swagger_config import SWAGGER_TEMPLATE, SWAGGER_CONFIG
 from routes.categorias import bp as categorias_bp
 from routes.despesas import bp as despesas_bp

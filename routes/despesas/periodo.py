@@ -1,6 +1,6 @@
 from flask import request, jsonify
 
-from models import get_db
+from model.models import get_db
 from utils import parse_date, row_to_dict
 from routes.despesas import bp
 

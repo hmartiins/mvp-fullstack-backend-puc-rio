@@ -1,6 +1,6 @@
 from flask import jsonify
 
-from models import get_db
+from model.models import get_db
 from utils import row_to_dict
 from routes.categorias import bp
 

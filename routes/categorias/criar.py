@@ -2,7 +2,7 @@ import uuid
 
 from flask import request, jsonify
 
-from models import get_db
+from model.models import get_db
 from routes.categorias import bp
 
 
