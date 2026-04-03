@@ -14,7 +14,6 @@ def despesas_por_periodo(query: PeriodoQuery):
         data_inicio = parse_date(query.data_inicio)
         data_fim = parse_date(query.data_fim)
     except ValueError:
-        from flask import jsonify
         return jsonify({"erro": "Datas devem estar no formato YYYY-MM-DD"}), 400
 
     despesas = despesa_service.por_periodo(data_inicio, data_fim)
